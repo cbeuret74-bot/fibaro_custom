@@ -1,9 +1,12 @@
 {
   "domain": "fibaro_custom",
   "name": "Fibaro Custom",
-  "codeowners": ["@Chris"],
+  "documentation": "https://github.com/cbeuret74-bot/fibaro_custom",
+  "issue_tracker": "https://github.com/cbeuret74-bot/fibaro_custom/issues",
+  "codeowners": [
+    "@cbeuret"
+  ],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/fibaro",
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyfibaro"],
