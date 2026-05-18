@@ -1,8 +1,8 @@
 {
-  "domain": "fibaro_custom",
-  "name": "Fibaro Custom",
-  "documentation": "https://github.com/cbeuret74-bot/fibaro_custom",
-  "issue_tracker": "https://github.com/cbeuret74-bot/fibaro_custom/issues",
+  "domain": "fibaro_custom_v2",
+  "name": "Fibaro Custom V2",
+  "documentation": "https://github.com/cbeuret74-bot/fibaro_custom_v2",
+  "issue_tracker": "https://github.com/cbeuret74-bot/fibaro_custom_v2/issues",
   "codeowners": [
     "@cbeuret"
   ],
