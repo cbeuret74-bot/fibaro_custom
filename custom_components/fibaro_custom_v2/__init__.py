@@ -17,7 +17,7 @@ from pyfibaro.fibaro_info import InfoModel
 from pyfibaro.fibaro_scene import SceneModel
 from pyfibaro.fibaro_state_resolver import FibaroEvent
 
-from .pyfibaro.fibaro_room import RoomModel
+from pyfibaro.fibaro_room import RoomModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
