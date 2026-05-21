@@ -135,7 +135,9 @@ class FibaroController:
             device
             for device in self._device_map.values()
             if device.parent_fibaro_id == device_id
-        ]def get_children2(self, device_id: int, endpoint_id: int) -> list[DeviceModel]:
+        ]
+    
+    def get_children2(self, device_id: int, endpoint_id: int) -> list[DeviceModel]:
         """Get a list of child devices for the same endpoint."""
         return [
             device
