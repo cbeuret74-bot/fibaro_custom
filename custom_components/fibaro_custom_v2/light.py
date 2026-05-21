@@ -3,7 +3,7 @@
 from contextlib import suppress
 from typing import Any
 
-from .pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
