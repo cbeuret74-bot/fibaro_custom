@@ -4,7 +4,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from .pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.climate import (
     ENTITY_ID_FORMAT,
