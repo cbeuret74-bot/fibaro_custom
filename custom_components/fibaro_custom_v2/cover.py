@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from .pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
