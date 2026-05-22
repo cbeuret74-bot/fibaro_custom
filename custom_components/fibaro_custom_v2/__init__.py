@@ -507,9 +507,3 @@ class FibaroDevice(Entity):
             self._attr_available = not self.fibaro_device.dead
 
 
-class FibaroConnectFailed(HomeAssistantError):
-    """Error to indicate we cannot connect to fibaro home center."""
-
-
-class FibaroAuthFailed(HomeAssistantError):
-    """Error to indicate that authentication failed on fibaro home center."""
