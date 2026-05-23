@@ -113,14 +113,13 @@ TARGET_TEMP_ACTIONS = (
 
 OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     async_add_entities(
         [
             FibaroThermostat(device)
