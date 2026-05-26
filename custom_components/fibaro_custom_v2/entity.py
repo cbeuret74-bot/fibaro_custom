@@ -28,7 +28,6 @@ class FibaroEntity(Entity):
         self._attr_unique_id = fibaro_device.unique_id_str
 
         self._attr_device_info = self.controller.get_device_info(fibaro_device)
-        # propagate hidden attribute set in fibaro home center to HA
         if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False
 
@@ -93,6 +92,11 @@ class FibaroEntity(Entity):
     def action(self, cmd: str, *args: Any) -> None:
         """Perform an action on the Fibaro HC."""
         self.fibaro_device.execute_action(cmd, args)
+
+    def callAction(self, cmd: str, *args: Any) -> None:
+        """Perform a uiCallback action on the Fibaro HC (used by media_player)."""
+        self.fibaro_device.execute_callAction(cmd, args)
+        _LOGGER.debug("-> %s.%s%s called", str(self.ha_id), str(cmd), str(args))
 
     @property
     def current_binary_state(self) -> bool:
