@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from pyfibaro.fibaro_client import (
-    FibaroAuthenticationFailed,
     FibaroClient,
     FibaroConnectFailed,
 )
@@ -27,6 +26,10 @@ from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
+# FibaroAuthenticationFailed absent de pyfibaro 0.8.3 — défini localement
+class FibaroAuthenticationFailed(Exception):
+    """Authentication failed on Fibaro hub."""
+
 type FibaroConfigEntry = ConfigEntry[FibaroController]
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,30 +48,66 @@ PLATFORMS = [
 ]
 
 FIBARO_TYPEMAP = {
+    # Sensors
     "com.fibaro.multilevelSensor": Platform.SENSOR,
-    "com.fibaro.binarySwitch": Platform.SWITCH,
-    "com.fibaro.multilevelSwitch": Platform.SWITCH,
-    "com.fibaro.FGD212": Platform.LIGHT,
-    "com.fibaro.FGR": Platform.COVER,
+    "com.fibaro.temperatureSensor": Platform.SENSOR,
+    "com.fibaro.lightSensor": Platform.SENSOR,
+    "com.fibaro.humiditySensor": Platform.SENSOR,
+    "com.fibaro.windSensor": Platform.SENSOR,
+    "com.fibaro.rainSensor": Platform.SENSOR,
+    "com.fibaro.sensor": Platform.SENSOR,
+    "com.fibaro.waterMeter": Platform.SENSOR,
+    "com.fibaro.weather": Platform.SENSOR,
+    # Binary sensors
     "com.fibaro.doorSensor": Platform.BINARY_SENSOR,
     "com.fibaro.doorWindowSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.windowSensor": Platform.BINARY_SENSOR,
     "com.fibaro.FGMS001": Platform.BINARY_SENSOR,
+    "com.fibaro.FGDW002": Platform.BINARY_SENSOR,
+    "com.fibaro.FGSS001": Platform.BINARY_SENSOR,
+    "com.fibaro.FGFS101": Platform.BINARY_SENSOR,
     "com.fibaro.heatDetector": Platform.BINARY_SENSOR,
     "com.fibaro.lifeDangerSensor": Platform.BINARY_SENSOR,
     "com.fibaro.smokeSensor": Platform.BINARY_SENSOR,
-    "com.fibaro.remoteSwitch": Platform.SWITCH,
-    "com.fibaro.sensor": Platform.SENSOR,
-    "com.fibaro.waterMeter": Platform.SENSOR,
-    "com.fibaro.colorController": Platform.LIGHT,
+    "com.fibaro.floodSensor": Platform.BINARY_SENSOR,
     "com.fibaro.securitySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.motionSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
+    # Switches
+    "com.fibaro.binarySwitch": Platform.SWITCH,
+    "com.fibaro.multilevelSwitch": Platform.SWITCH,
+    "com.fibaro.remoteSwitch": Platform.SWITCH,
+    "com.fibaro.FGWP101": Platform.SWITCH,
+    "com.fibaro.FGWP102": Platform.SWITCH,
+    "com.fibaro.FGWOEF011": Platform.SWITCH,
+    "com.fibaro.FGWP": Platform.SWITCH,
+    # Lights
+    "com.fibaro.FGD212": Platform.LIGHT,
+    "com.fibaro.colorController": Platform.LIGHT,
+    "com.fibaro.FGRGBW441M": Platform.LIGHT,
+    "com.fibaro.FGRGBW442CC": Platform.LIGHT,
+    # Covers
+    "com.fibaro.FGR": Platform.COVER,
+    "com.fibaro.FGR223": Platform.COVER,
+    "com.fibaro.FGR224": Platform.COVER,
+    "com.fibaro.FGRM222": Platform.COVER,
+    "com.fibaro.baseShutter": Platform.COVER,
+    "com.fibaro.rollerShutter": Platform.COVER,
+    "com.fibaro.rollerShutter2": Platform.COVER,
+    "com.fibaro.rollerShutter3": Platform.COVER,
+    # Climate
     "com.fibaro.hvac": Platform.CLIMATE,
     "com.fibaro.hvacSystem": Platform.CLIMATE,
+    "com.fibaro.hvacSystemHeat": Platform.CLIMATE,
     "com.fibaro.setpoint": Platform.CLIMATE,
     "com.fibaro.FGT001": Platform.CLIMATE,
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
+    # Lock
     "com.fibaro.doorLock": Platform.LOCK,
-    "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
-    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
+    # Event
+    "com.fibaro.FGPB101": Platform.EVENT,
+    "com.fibaro.remoteSceneController": Platform.EVENT,
 }
 
 
@@ -82,26 +121,19 @@ class FibaroController:
         self._client = fibaro_client
         self._fibaro_info = info
 
-        # The fibaro device manager exposes higher level API to access fibaro devices
         self._fibaro_device_manager = FibaroDeviceManager(fibaro_client, import_plugins)
-        # Mapping roomId to room object
         self._room_map = read_rooms(fibaro_client)
-        self._device_map: dict[int, DeviceModel]  # Mapping deviceId to device object
-        self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(
-            list
-        )  # List of devices by entity platform
-        # All scenes
+        self._device_map: dict[int, DeviceModel]
+        self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(list)
         self._scenes = self._client.read_scenes()
-        # Unique serial number of the hub
         self.hub_serial = info.serial_number
-        # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
         self._read_devices()
 
     def disconnect(self) -> None:
         """Close push channel."""
         self._fibaro_device_manager.close()
-        
+
     def register(
         self, device_id: int, callback: Callable[[DeviceModel], None]
     ) -> Callable[[], None]:
@@ -111,10 +143,7 @@ class FibaroController:
     def register_event(
         self, device_id: int, callback: Callable[[FibaroEvent], None]
     ) -> Callable[[], None]:
-        """Register device with a callback for central scene events.
-
-        The callback receives one parameter with the event.
-        """
+        """Register device with a callback for central scene events."""
         return self._fibaro_device_manager.add_event_listener(device_id, callback)
 
     def get_children(self, device_id: int) -> list[DeviceModel]:
@@ -124,7 +153,7 @@ class FibaroController:
             for device in self._device_map.values()
             if device.parent_fibaro_id == device_id
         ]
-    
+
     def get_children2(self, device_id: int, endpoint_id: int) -> list[DeviceModel]:
         """Get a list of child devices for the same endpoint."""
         return [
@@ -143,14 +172,12 @@ class FibaroController:
     @staticmethod
     def _map_device_to_platform(device: DeviceModel) -> Platform | None:
         """Map device to HA device type."""
-        # Use our lookup table to identify device type
         platform: Platform | None = None
         if device.type:
             platform = FIBARO_TYPEMAP.get(device.type)
         if platform is None and device.base_type:
             platform = FIBARO_TYPEMAP.get(device.base_type)
 
-        # We can also identify device type by its capabilities
         if platform is None:
             if "setBrightness" in device.actions:
                 platform = Platform.LIGHT
@@ -171,17 +198,14 @@ class FibaroController:
             ):
                 platform = Platform.SENSOR
 
-        # Switches that control lights should show up as lights
         if platform == Platform.SWITCH and device.properties.get("isLight", False):
             platform = Platform.LIGHT
-        # Switches that control TV should show up as Remotes
         if platform == Platform.SWITCH and (device.properties.get("deviceRole") == "TvSet"):
             platform = Platform.MEDIA_PLAYER
         return platform
 
     def _create_device_info(self, main_device: DeviceModel) -> None:
         """Create the device info for a main device."""
-
         if "zwaveCompany" in main_device.properties:
             manufacturer = main_device.properties.get("zwaveCompany")
         else:
@@ -264,8 +288,7 @@ class FibaroController:
                 if platform != Platform.CLIMATE:
                     self.fibaro_devices[platform].append(device)
                     continue
-                # We group climate devices into groups with the same
-                # endPointID belonging to the same parent device.
+
                 if device.has_endpoint_id:
                     _LOGGER.debug(
                         "climate device: %s, endPointId: %s",
@@ -274,11 +297,7 @@ class FibaroController:
                     )
                 else:
                     _LOGGER.debug("climate device: %s, no endPointId", device.ha_id)
-                # If a sibling of this device has been added, skip this one
-                # otherwise add the first visible device in the group
-                # which is a hack, but solves a problem with FGT having
-                # hidden compatibility devices before the real device
-                # Second hack is for quickapps which have parent id 0 and no children
+
                 if (
                     last_climate_parent != device.parent_fibaro_id
                     or (device.has_endpoint_id and last_endpoint != device.endpoint_id)
@@ -290,7 +309,7 @@ class FibaroController:
                     last_endpoint = device.endpoint_id
                 else:
                     _LOGGER.debug("not handling separately")
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 pass
 
 
@@ -308,10 +327,7 @@ def init_controller(data: Mapping[str, Any]) -> FibaroController:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
-    """Set up the Fibaro Component.
-
-    The unique id of the config entry is the serial number of the home center.
-    """
+    """Set up the Fibaro Component."""
     try:
         controller = await hass.async_add_executor_job(init_controller, entry.data)
     except FibaroConnectFailed as connect_ex:
@@ -323,7 +339,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
 
     entry.runtime_data = controller
 
-    # register the hub device info separately as the hub has sometimes no entities
     fibaro_info = controller.read_fibaro_info()
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -347,7 +362,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> b
     """Unload a config entry."""
     _LOGGER.debug("Shutting down Fibaro connection")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
     entry.runtime_data.disconnect()
     return unload_ok
 
@@ -355,15 +369,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> b
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: DeviceEntry
 ) -> bool:
-    """Remove a device entry from fibaro integration.
-
-    Only removing devices which are not present anymore are eligible to be removed.
-    """
+    """Remove a device entry from fibaro integration."""
     controller = config_entry.runtime_data
     for identifiers in controller.get_all_device_identifiers():
         if device_entry.identifiers == identifiers:
-            # Fibaro device is still served by the controller,
-            # do not allow to remove the device entry
             return False
-
     return True
