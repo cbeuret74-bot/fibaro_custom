@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
 from homeassistant.const import Platform
