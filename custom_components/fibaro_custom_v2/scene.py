@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyfibaro.fibaro_scene import SceneModel
+from .pyfibaro.fibaro_scene import SceneModel
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
