@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyfibaro.fibaro_client import FibaroConnectFailed
+from .pyfibaro.fibaro_client import FibaroConnectFailed
 from . import FibaroAuthenticationFailed  # importé depuis __init__.py
 
 from slugify import slugify
