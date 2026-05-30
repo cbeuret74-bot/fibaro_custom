@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast
 
-from pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT,
