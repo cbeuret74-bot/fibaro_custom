@@ -43,6 +43,8 @@ class DeviceModel:
     @property
     def parent_fibaro_id(self) -> int:
         """Id of the parent device or 0 if there is no parent."""
+        if self.raw_data.get("type") == "com.fibaro.hvacSystemHeat":
+            return int(self.raw_data.get("id"))
         return int(self.raw_data.get("parentId", 0))
 
     @property
@@ -69,6 +71,15 @@ class DeviceModel:
     def actions(self) -> dict[str, int]:
         """Get the available actions."""
         return self.raw_data.get("actions", {})
+
+    @property
+    def uiCallbacks(self) -> dict[str, int]:
+        """Get the available actions."""
+        # Récupérer la liste des callbacks
+        ui_callbacks = self.properties.get("uiCallbacks")
+        # Extraire les valeurs de la clé 'callback'
+        callback_values = [callback.get("callback") for callback in ui_callbacks]
+        return callback_values
 
     def has_interface(self, interface_name: str) -> bool:
         """Returns True if the device has the according interface defined.
@@ -372,6 +383,38 @@ class DeviceModel:
         )
         return self._rest_client.post(url, json=args_prepared)
 
+    def execute_callAction(self, callAction: str, arguments: list[Any] | None = None) -> Any:
+        """Execute a device callAction.
+
+        Params:
+        callAction: name of the function to call
+        arguments: list of arguments needed for the callback function
+        """
+        if callAction not in self.uiCallbacks and callAction not in self.actions:
+            _LOGGER.warning(
+                "The device %s has no action %s. Possible Callback function are %s or %s",
+                self.fibaro_id,
+                callAction,
+                self.uiCallbacks,
+                self.actions,
+            )
+
+        url = f"callAction?deviceID={self.fibaro_id}&name={callAction}"
+        
+        index = 0
+
+        for arg in arguments:
+            index += 1
+            url += f"&arg{index}={arg}"
+
+        _LOGGER.debug(
+            "Execute %s for device %s url %s.",
+            callAction,
+            self.fibaro_id,
+            url
+        )
+        return self._rest_client.get(url)
+    
     @staticmethod
     def read_devices(rest_client: RestClient, api_version: int) -> list[DeviceModel]:
         """Returns a list of devices."""
