@@ -5,16 +5,16 @@ from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
-from pyfibaro.fibaro_client import (
+from .pyfibaro.fibaro_client import (
     FibaroClient,
     FibaroConnectFailed,
 )
-from pyfibaro.fibaro_data_helper import find_master_devices, read_rooms
-from pyfibaro.fibaro_device import DeviceModel
-from pyfibaro.fibaro_device_manager import FibaroDeviceManager
-from pyfibaro.fibaro_info import InfoModel
-from pyfibaro.fibaro_scene import SceneModel
-from pyfibaro.fibaro_state_resolver import FibaroEvent
+from .pyfibaro.fibaro_data_helper import find_master_devices, read_rooms
+from .pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device_manager import FibaroDeviceManager
+from .pyfibaro.fibaro_info import InfoModel
+from .pyfibaro.fibaro_scene import SceneModel
+from .pyfibaro.fibaro_state_resolver import FibaroEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
