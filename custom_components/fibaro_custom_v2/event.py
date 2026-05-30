@@ -1,7 +1,7 @@
 """Support for Fibaro event entities."""
 
-from pyfibaro.fibaro_device import DeviceModel, SceneEvent
-from pyfibaro.fibaro_state_resolver import FibaroEvent
+from .pyfibaro.fibaro_device import DeviceModel, SceneEvent
+from .pyfibaro.fibaro_state_resolver import FibaroEvent
 
 from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
