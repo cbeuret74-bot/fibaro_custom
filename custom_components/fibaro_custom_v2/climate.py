@@ -305,7 +305,7 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
                 for mode in device.supported_thermostat_modes:
                     if device.type != "com.fibaro.hvacSystemHeat":
                         if mode.lower() == hvac_mode:
-                            device.execute_action("setThermostatMode", [mode])
+                            device.execute_action("setThermostatMode", mode)
                             break
                     else:
                         if mode == HA_HEATMODES[hvac_mode]:
