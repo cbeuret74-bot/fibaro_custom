@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 
-from pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
