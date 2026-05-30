@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.const import ATTR_ARMED, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
