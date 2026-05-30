@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from pyfibaro.fibaro_device import DeviceModel
+from .pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
